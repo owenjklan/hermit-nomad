@@ -2,6 +2,27 @@ from pathlib import Path
 from typing import Dict, Optional
 
 
+def format_ssh_connection(ssh_selection: Dict[str, Optional[str | int]]) -> str:
+    """
+    Generates an SSH connection string from the given host configuration.
+
+    Args:
+        ssh_selection (Dict[str, Optional[str | int]]): The selected host's configuration.
+
+    Returns:
+        str: The SSH connection string in the format 'user@host_name[:port]'.
+    """
+    user = ssh_selection.get("user", "unknown")
+    host_name = ssh_selection.get("host_name", "unknown")
+    port = ssh_selection.get("port")
+
+    connection_string = f"{user}@{host_name}"
+    if port:
+        connection_string += f":{port}"
+
+    return connection_string
+
+
 def parse_ssh_config(ssh_config_path: Path = Path("~/.ssh/config")) -> Dict[str, Dict[str, Optional[str | int]]]:
     """
     Parses an SSH config file and returns a dictionary representation of its contents.

@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+import os
+import argparse
+from ssh import parse_ssh_config, format_ssh_connection
+import inquirer
+
+
+def select_ssh_host(ssh_config):
+    choices = [
+        (f"{host} ({format_ssh_connection(config)})", host)
+        for host, config in ssh_config.items()
+    ]
+
+    questions = [
+        inquirer.List(
+            "host",
+            message="Select SSH host to connect to",
+            choices=choices,
+        )
+    ]
+    answers = inquirer.prompt(questions)
+
+    if answers and "host" in answers:
+        return answers["host"]
+    else:
+        return None
+
+
+def exec_ssh(connection_string):
+    os.execvp("ssh", ["ssh", connection_string])
+
+
+def select_and_connect(ssh_config):
+    selected_host = select_ssh_host(ssh_config)
+
+    if selected_host:
+        ssh_selection = ssh_config[selected_host]
+        connection_string = format_ssh_connection(ssh_selection)
+        exec_ssh(connection_string)
+    else:
+        print("No host selected.")
+
+
+def key_check(ssh_config):
+    print("Key check functionality not implemented yet.")
+
+
+def key_copy(ssh_config):
+    print("Key copy functionality not implemented yet.")
+
+
+def main():
+    # Parse the SSH config file
+    ssh_config = parse_ssh_config()
+
+    # Set up argument parsing
+    parser = argparse.ArgumentParser(description="SSH connection utility.")
+    parser.add_argument(
+        "hostname",
+        nargs="?",
+        help="Optional hostname to connect to directly.",
+    )
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--key-check", action="store_true", help="Check SSH keys.")
+    group.add_argument("--key-copy", action="store_true", help="Copy SSH keys.")
+    args = parser.parse_args()
+
+    # Handle arguments
+    if args.key_check:
+        key_check(ssh_config)
+    elif args.key_copy:
+        key_copy(ssh_config)
+    elif args.hostname:
+        exec_ssh(args.hostname)
+    else:
+        select_and_connect(ssh_config)
+
+
+if __name__ == "__main__":
+    main()
